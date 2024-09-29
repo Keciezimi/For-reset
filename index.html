@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>File Upload and Download</title>
+</head>
+<body>
+    <h2>Upload and Download Files</h2>
+
+    <!-- Upload Button -->
+    <input type="file" id="uploadFile" multiple />
+    <button id="uploadBtn">Upload Files</button>
+    <br><br>
+
+    <!-- Download Button -->
+    <button id="downloadBtn">Download Files</button>
+    <br><br>
+
+    <!-- Uploaded Files List -->
+    <ul id="fileList"></ul>
+
+    <script>
+        // Variables to store uploaded files
+let uploadedFiles = [];
+
+// Function to handle file upload
+function handleFileUpload(event) {
+    const input = document.getElementById('uploadFile');
+    uploadedFiles = Array.from(input.files); // Store files in an array
+
+    // Display the uploaded files in the list
+    const fileList = document.getElementById('fileList');
+    fileList.innerHTML = '';
+    uploadedFiles.forEach((file, index) => {
+        const listItem = document.createElement('li');
+        listItem.textContent = file.name;
+        fileList.appendChild(listItem);
+    });
+}
+
+// Function to handle file download
+function handleFileDownload() {
+    if (uploadedFiles.length === 0) {
+        alert('No files uploaded to download!');
+        return;
+    }
+
+    uploadedFiles.forEach(file => {
+        // Create a download link for each file
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(file); // Create a downloadable URL
+        a.download = file.name; // Set the file name
+        a.click(); // Trigger the download
+    });
+}
+
+// Event listeners for button clicks
+document.getElementById('uploadBtn').addEventListener('click', handleFileUpload);
+document.getElementById('downloadBtn').addEventListener('click', handleFileDownload);
+
+    </script>
+</body>
+</html>
