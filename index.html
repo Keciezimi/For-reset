@@ -3,62 +3,119 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>File Upload and Download</title>
+    <title>File Upload, Download, and Delete</title>
 </head>
 <body>
-    <h2>Upload and Download Files</h2>
+    <h2>Upload, Download, and Manage Files</h2>
 
     <!-- Upload Button -->
     <input type="file" id="uploadFile" multiple />
-    <button id="uploadBtn">Upload Files</button>
+    <button id="uploadBtn">Upload Files (Max: 80)</button>
     <br><br>
 
     <!-- Download Button -->
-    <button id="downloadBtn">Download Files</button>
+    <button id="downloadBtn">Download All Files</button>
+    <br><br>
+
+    <!-- Delete File Section -->
+    <input type="text" id="deleteFileName" placeholder="Enter file name to delete" />
+    <button id="deleteBtn">Delete File</button>
     <br><br>
 
     <!-- Uploaded Files List -->
     <ul id="fileList"></ul>
 
     <script>
-        // Variables to store uploaded files
-let uploadedFiles = [];
+        // Variables to store uploaded files metadata (not actual files)
+        let uploadedFiles = JSON.parse(localStorage.getItem('uploadedFiles')) || [];
 
-// Function to handle file upload
-function handleFileUpload(event) {
-    const input = document.getElementById('uploadFile');
-    uploadedFiles = Array.from(input.files); // Store files in an array
+        // Maximum number of files allowed
+        const maxFiles = 80;
 
-    // Display the uploaded files in the list
-    const fileList = document.getElementById('fileList');
-    fileList.innerHTML = '';
-    uploadedFiles.forEach((file, index) => {
-        const listItem = document.createElement('li');
-        listItem.textContent = file.name;
-        fileList.appendChild(listItem);
-    });
-}
+        // Initialize file list on page load
+        function initializeFileList() {
+            const fileList = document.getElementById('fileList');
+            fileList.innerHTML = '';
 
-// Function to handle file download
-function handleFileDownload() {
-    if (uploadedFiles.length === 0) {
-        alert('No files uploaded to download!');
-        return;
-    }
+            uploadedFiles.forEach((file, index) => {
+                const listItem = document.createElement('li');
+                listItem.textContent = `${index + 1}. ${file.name}`;
 
-    uploadedFiles.forEach(file => {
-        // Create a download link for each file
-        const a = document.createElement('a');
-        a.href = URL.createObjectURL(file); // Create a downloadable URL
-        a.download = file.name; // Set the file name
-        a.click(); // Trigger the download
-    });
-}
+                // Create an individual download button for each file
+                const downloadButton = document.createElement('button');
+                downloadButton.textContent = 'Download';
+                downloadButton.addEventListener('click', () => {
+                    alert(`You would need to re-upload "${file.name}" to download it again.`);
+                });
 
-// Event listeners for button clicks
-document.getElementById('uploadBtn').addEventListener('click', handleFileUpload);
-document.getElementById('downloadBtn').addEventListener('click', handleFileDownload);
+                listItem.appendChild(downloadButton);
+                fileList.appendChild(listItem);
+            });
+        }
 
+        // Save uploaded files metadata to localStorage
+        function saveFilesToLocalStorage() {
+            localStorage.setItem('uploadedFiles', JSON.stringify(uploadedFiles));
+        }
+
+        // Function to handle file upload
+        function handleFileUpload() {
+            const input = document.getElementById('uploadFile');
+            const selectedFiles = Array.from(input.files); // Store files in an array
+
+            // Check if the user is trying to upload more than the max limit
+            if (selectedFiles.length + uploadedFiles.length > maxFiles) {
+                alert(`You can only upload a maximum of ${maxFiles} files.`);
+                return;
+            }
+
+            // Add the selected files metadata (name, type) to the uploadedFiles array
+            selectedFiles.forEach(file => {
+                uploadedFiles.push({ name: file.name, size: file.size, type: file.type });
+            });
+
+            // Save to localStorage and update the displayed file list
+            saveFilesToLocalStorage();
+            initializeFileList();
+        }
+
+        // Function to handle deleting a file by name
+        function handleFileDelete() {
+            const fileName = document.getElementById('deleteFileName').value.trim();
+
+            // Check if the file exists in the uploaded files
+            const fileIndex = uploadedFiles.findIndex(file => file.name === fileName);
+            if (fileIndex === -1) {
+                alert(`File "${fileName}" not found.`);
+                return;
+            }
+
+            // Remove the file from the array and update localStorage
+            uploadedFiles.splice(fileIndex, 1);
+            saveFilesToLocalStorage();
+
+            // Update the displayed file list
+            initializeFileList();
+            alert(`File "${fileName}" has been deleted.`);
+        }
+
+        // Function to handle downloading all files
+        function handleFileDownload() {
+            if (uploadedFiles.length === 0) {
+                alert('No files uploaded to download!');
+                return;
+            }
+
+            alert("You would need to re-upload files to download them.");
+        }
+
+        // Event listeners for button clicks
+        document.getElementById('uploadBtn').addEventListener('click', handleFileUpload);
+        document.getElementById('downloadBtn').addEventListener('click', handleFileDownload);
+        document.getElementById('deleteBtn').addEventListener('click', handleFileDelete);
+
+        // Initialize the file list when the page loads
+        window.onload = initializeFileList;
     </script>
 </body>
 </html>
